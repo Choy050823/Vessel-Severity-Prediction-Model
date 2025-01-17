@@ -32,8 +32,8 @@ def paraphrase_column(df, column_name, num_return_sequences=1, num_beams=10):
 csv_file_path = '../Main/Cleansed_Data/cleansed_data.csv'  # Replace with your CSV file path
 df = pd.read_csv(csv_file_path)
 
-# Select only the first 20 rows
-# df = df.head(20)
+# Select only the first 20 rows (EDIT TO ROWS NEEDED)
+df = df.head(20)
 
 # Select the specific columns
 columns_to_paraphrase = ['deficiency_finding', 'description_overview', 'immediate_causes', 'root_cause_analysis', 'corrective_action', 'preventive_action']
