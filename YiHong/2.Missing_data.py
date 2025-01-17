@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 
-df = pd.read_csv('psc_severity_train.csv')
+df = pd.read_csv(r'Data\0.psc_severity_train.csv')
 
 # Locate missing data rows
 missing_data_rows = df[df.isnull().any(axis=1)]
