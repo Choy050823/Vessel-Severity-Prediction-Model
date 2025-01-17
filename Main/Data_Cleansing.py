@@ -32,7 +32,7 @@ filtered_df = df.dropna()
 df_final = filtered_df.drop(filtered_df.columns[[0,2,3,6,7]], axis=1)
 
 # Save the new DataFrame to a new CSV file
-df_final.to_csv(os.path.join('Data', 'final_data.csv'), index=False)
+df_final.to_csv(os.path.join('Cleansed_Data', 'final_data.csv'), index=False)
 
 # Display the filtered DataFrame
 print(df_final)
