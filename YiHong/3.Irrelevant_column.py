@@ -17,5 +17,7 @@ df_selected.to_csv(os.path.join('Data', '3.selected_data.csv'), index=False)
 df_unselected.to_csv(os.path.join('Data', '3.unselected_data.csv'), index=False) 
 
 # Display the filtered DataFrame
+print('Data with only relevant columns')
 print(df_selected)
+print('Data with only irrelevant columns')
 print(df_unselected)

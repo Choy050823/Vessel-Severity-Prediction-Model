@@ -15,5 +15,7 @@ filtered_df.to_csv(os.path.join('Data', '2.filtered_data.csv'), index=False)
 missing_data_rows.to_csv(os.path.join('Data', '2.missing_data.csv'), index=False)
 
 # Display the filtered DataFrame
+print('Data with no missing values')
 print(filtered_df)
+print('Data with missing values')
 print(missing_data_rows)

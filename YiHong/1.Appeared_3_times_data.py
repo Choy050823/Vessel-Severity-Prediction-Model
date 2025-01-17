@@ -23,5 +23,7 @@ filtered_df.to_csv(os.path.join('Data', '1.filtered_rows.csv'), index=False)
 irregular_df.to_csv(os.path.join('Data', '1.irregular_data.csv'), index=False)
 
 # Display the filtered DataFrame
-print(filtered_df.isnull)
-print(irregular_df.isnull)
+print('DataFrame with each PscIspectionId only appears 3 times')
+print(filtered_df)
+print('DataFrame with each PscIspectionId appears less than or more than 3 times')
+print(irregular_df)
