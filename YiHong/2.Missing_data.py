@@ -9,8 +9,8 @@ missing_data_rows = df[df.isnull().any(axis=1)]
 filtered_df = df.dropna()
 
 # Save the filtered data to a new CSV file
-filtered_df.to_csv('filtered_data.csv', index=False)
-missing_data_rows.to_csv('missing_data.csv', index=False)
+filtered_df.to_csv('2.filtered_data.csv', index=False)
+missing_data_rows.to_csv('2.missing_data.csv', index=False)
 
 print(filtered_df)
 print(missing_data_rows)

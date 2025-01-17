@@ -18,8 +18,8 @@ filtered_df = df[df[column_name].isin(valid_values)]
 irregular_df = df[df[column_name].isin(invalid_values)]
 
 # Save the filtered rows to a new CSV
-filtered_df.to_csv('filtered_rows.csv', index=False)
-irregular_df.to_csv('irregular_data.csv', index=False)
+filtered_df.to_csv('1.filtered_rows.csv', index=False)
+irregular_df.to_csv('1.irregular_data.csv', index=False)
 
 # Display the filtered DataFrame
 print(filtered_df.isnull)
