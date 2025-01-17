@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 
@@ -12,8 +13,8 @@ df_selected = df.iloc[:, selected_columns]
 df_unselected = df.iloc[:, unselected_columns]
 
 # Save the new DataFrame to a new CSV file
-df_selected.to_csv('3.selected_data.csv', index=False)
-df_unselected.to_csv('3.unselected_data.csv', index=False) 
+df_selected.to_csv(os.path.join('Data', '3.selected_data.csv'), index=False)
+df_unselected.to_csv(os.path.join('Data', '3.unselected_data.csv'), index=False) 
 
 # Display the filtered DataFrame
 print(df_selected)
