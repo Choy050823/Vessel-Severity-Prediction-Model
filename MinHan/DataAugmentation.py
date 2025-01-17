@@ -1,132 +1,49 @@
-# Step 1: Install Required Libraries
-# !pip install torch torchvision pytorch-lightning pandas scikit-learn
-
-# Step 2: Import Libraries
 import torch
-import torch.nn as nn
-import pytorch_lightning as pl
-from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
-import numpy as np
-from sklearn.preprocessing import StandardScaler
+from transformers import PegasusForConditionalGeneration, PegasusTokenizer
 
-# Step 3: Load and Preprocess Your .csv File
-# Upload your .csv file to Colab or mount Google Drive
-from google.colab import files
-uploaded = files.upload()
+# Load the model and tokenizer
+model_name = 'tuner007/pegasus_paraphrase'
+torch_device = 'cuda' if torch.cuda.is_available() else 'cpu'
+tokenizer = PegasusTokenizer.from_pretrained(model_name)
+model = PegasusForConditionalGeneration.from_pretrained(model_name).to(torch_device)
 
-# Load the .csv file
-file_name = list(uploaded.keys())[0]  # Replace with your file name if needed
-data = pd.read_csv(file_name)
+# Function to get paraphrased response
+def get_response(input_text, num_return_sequences, num_beams):
+    batch = tokenizer([input_text], truncation=True, padding='longest', max_length=60, return_tensors="pt").to(torch_device)
+    translated = model.generate(**batch, max_length=60, num_beams=num_beams, num_return_sequences=num_return_sequences, temperature=1.5)
+    tgt_text = tokenizer.batch_decode(translated, skip_special_tokens=True)
+    return tgt_text
 
-# Preprocess the data (normalize numerical columns)
-scaler = StandardScaler()
-scaled_data = scaler.fit_transform(data.values)
+# Function to paraphrase a DataFrame column
+def paraphrase_column(df, column_name, num_return_sequences=1, num_beams=10):
+    paraphrased_column = []
+    for text in df[column_name]:
+        if pd.notna(text) and text.strip():  # Check if the text is not NaN and not empty
+            # print("Original: " + text)
+            paraphrased_text = get_response(text, num_return_sequences, num_beams)
+            # print("Paraphrased: ", paraphrased_text)
+            paraphrased_column.append(paraphrased_text[0])  # Take the first paraphrased sequence
+        else:
+            paraphrased_column.append('')  # Append empty string for NaN or empty text
+    return paraphrased_column
 
-# Convert to PyTorch tensors
-data_tensor = torch.tensor(scaled_data, dtype=torch.float32)
+# Load the CSV file
+csv_file_path = '../Main/Cleansed_Data/cleansed_data.csv'  # Replace with your CSV file path
+df = pd.read_csv(csv_file_path)
 
-# Create a DataLoader
-batch_size = 64
-dataset = TensorDataset(data_tensor)
-dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+# Select only the first 20 rows
+# df = df.head(20)
 
-# Step 4: Define the GAN
-class Generator(nn.Module):
-    def __init__(self, latent_dim, data_dim):
-        super().__init__()
-        self.model = nn.Sequential(
-            nn.Linear(latent_dim, 128),
-            nn.LeakyReLU(0.2),
-            nn.Linear(128, 256),
-            nn.LeakyReLU(0.2),
-            nn.Linear(256, 512),
-            nn.LeakyReLU(0.2),
-            nn.Linear(512, data_dim),
-        )
+# Select the specific columns
+columns_to_paraphrase = ['deficiency_finding', 'description_overview', 'immediate_causes', 'root_cause_analysis', 'corrective_action', 'preventive_action']
 
-    def forward(self, z):
-        return self.model(z)
+# Paraphrase the content in the selected columns
+for column in columns_to_paraphrase:
+    df[column] = paraphrase_column(df, column)
 
-class Discriminator(nn.Module):
-    def __init__(self, data_dim):
-        super().__init__()
-        self.model = nn.Sequential(
-            nn.Linear(data_dim, 512),
-            nn.LeakyReLU(0.2),
-            nn.Linear(512, 256),
-            nn.LeakyReLU(0.2),
-            nn.Linear(256, 1),
-            nn.Sigmoid(),
-        )
+# Save the paraphrased DataFrame to a new CSV file
+output_csv_path = 'augmented_data.csv'
+df.to_csv(output_csv_path, index=False)
 
-    def forward(self, data):
-        return self.model(data)
-
-class GAN(pl.LightningModule):
-    def __init__(self, latent_dim, data_dim, lr):
-        super().__init__()
-        self.generator = Generator(latent_dim, data_dim)
-        self.discriminator = Discriminator(data_dim)
-        self.lr = lr
-
-    def forward(self, z):
-        return self.generator(z)
-
-    def adversarial_loss(self, y_hat, y):
-        return nn.BCELoss()(y_hat, y)
-
-    def training_step(self, batch, batch_idx, optimizer_idx):
-        real_data = batch[0]
-
-        # Train generator
-        if optimizer_idx == 0:
-            z = torch.randn(real_data.shape[0], latent_dim).to(self.device)
-            fake_data = self(z)
-            validity = self.discriminator(fake_data)
-            g_loss = self.adversarial_loss(validity, torch.ones_like(validity))
-            self.log("g_loss", g_loss)
-            return g_loss
-
-        # Train discriminator
-        if optimizer_idx == 1:
-            validity_real = self.discriminator(real_data)
-            d_loss_real = self.adversarial_loss(validity_real, torch.ones_like(validity_real))
-
-            z = torch.randn(real_data.shape[0], latent_dim).to(self.device)
-            fake_data = self(z)
-            validity_fake = self.discriminator(fake_data.detach())
-            d_loss_fake = self.adversarial_loss(validity_fake, torch.zeros_like(validity_fake))
-
-            d_loss = (d_loss_real + d_loss_fake) / 2
-            self.log("d_loss", d_loss)
-            return d_loss
-
-    def configure_optimizers(self):
-        opt_g = torch.optim.Adam(self.generator.parameters(), lr=self.lr)
-        opt_d = torch.optim.Adam(self.discriminator.parameters(), lr=self.lr)
-        return [opt_g, opt_d], []
-
-# Step 5: Train the GAN
-latent_dim = 100  # Size of the noise vector
-data_dim = data_tensor.shape[1]  # Number of features in your dataset
-lr = 0.0002
-
-gan = GAN(latent_dim, data_dim, lr)
-trainer = pl.Trainer(max_epochs=50, gpus=1)  # Use GPU
-trainer.fit(gan, dataloader)
-
-# Step 6: Generate Synthetic Data
-num_samples = 17991  # Number of synthetic samples to generate
-z = torch.randn(num_samples, latent_dim).to(gan.device)
-synthetic_data = gan(z).detach().cpu().numpy()
-
-# Step 7: Inverse Transform the Synthetic Data
-synthetic_data = scaler.inverse_transform(synthetic_data)  # Rescale to original range
-
-# Step 8: Save the Synthetic Data as a .csv File
-synthetic_df = pd.DataFrame(synthetic_data, columns=data.columns)
-synthetic_df.to_csv("synthetic_data.csv", index=False)
-
-# Download the synthetic data
-files.download("synthetic_data.csv")
+print(f"Paraphrased data for the first 20 rows saved to {output_csv_path}")
