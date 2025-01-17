@@ -22,3 +22,4 @@ df = pd.merge(df, consensus, on=['PscInspectionId', 'deficiency_code'], how='lef
 
 # Save the dataset with consensus severity
 df.to_csv('train_dataset_with_consensus.csv', index=False)
+print("Hello")
