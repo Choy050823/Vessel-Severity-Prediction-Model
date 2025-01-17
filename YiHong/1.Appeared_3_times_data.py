@@ -22,5 +22,5 @@ filtered_df.to_csv('filtered_rows.csv', index=False)
 irregular_df.to_csv('irregular_data.csv', index=False)
 
 # Display the filtered DataFrame
-print(filtered_df.isnull().sum())
-print(irregular_df.isnull().sum())
+print(filtered_df.isnull)
+print(irregular_df.isnull)
