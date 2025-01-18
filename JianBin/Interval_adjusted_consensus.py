@@ -73,7 +73,7 @@ df = pd.read_csv(input_file)
 df_with_stats = calculate_stats_and_adjusted_severity(df)
 
 # Save the result
-output_file = '/content/psc_severity_train_with_interval_adjusted.csv'
+output_file = '/content/psc_severity_test_with_interval_adjusted.csv'
 df_with_stats.to_csv(output_file, index=False)
 
 # Print summary statistics
